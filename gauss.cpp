@@ -14,7 +14,6 @@ int const EPSILON = pow(10, -6);
 
 
 vector<float> remplirLigne(string ligne, int n);
-float iemeSolution(vector<vector<float>> A,vector<float> B, unsigned int i);
 void lireData(int &n,vector<vector<float>> &A, vector <float> &b);
 void gauss(vector<vector<float>> A, vector<float> B);
 void afficherVect(vector<float> tab);
@@ -127,7 +126,7 @@ void afficher(vector<vector<float> > matrice){
 
 //Solution x de l'equation Ax = B, A étant une matrice inversible et B un vecteur colonne 
 void solution (vector<vector<float>> A,vector<float> B){
-    float x[A.size] = {0};
+    float x[A.size()] = {0};
     float somme;
     for(int i(A.size() -1);i>=0;i--){
         somme = 0;
