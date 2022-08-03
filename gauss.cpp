@@ -1,3 +1,9 @@
+/*
+    RAZAKAHASINA Fanomezana Sarobidy
+    L3 MISA 
+    Méthode d'élimination de Gauss
+*/
+
 #include<iostream>
 #include<vector>
 #include<cmath>
@@ -38,35 +44,35 @@ int main(){
 void lireData(int &n,vector<vector<float>> &A, vector <float> &b){
     fstream donnee;    
     string line;
-    int nombreLigne=0;
-    int nombreDeLigneMatrice=0;
-    int nombreDeLigneB=0;
+    int taille(0);
+    int tailleA=0;
+    int tailleB=0;
     //ouverture du fichier en mode lecture
     donnee.open("data.txt", ios::in);                                
     if(!donnee){
         cout<<"Erreur lors du chargement des données. Veuillez placer le fichier data.txt dans le répertoire courant."<<endl;
-        exit(-1);                                                                                        //on arrete le programme
+        exit(-1);                                                                                       
     }
     
     while(getline(donnee,line)){
-        if(nombreLigne==0)  n=stoi("0"+line);
-        else if(nombreDeLigneMatrice < n){
+        if(taille==0)  n=stoi("0"+line);
+        else if(tailleA < n){
             A.push_back(remplirLigne(line , n));
-            nombreDeLigneMatrice++;
+            tailleA++;
         }
         else{
             b.push_back(stof(line));
-            nombreDeLigneB++;
+            tailleB++;
         }
-        nombreLigne++;
+        taille++;
     }
 
     donnee.close();
-    if(nombreDeLigneMatrice!= n){
+    if(tailleA!= n){
         cout<<"La dimension de la matrice A dans le fichier 'data.txt' n'est pas valide"<<endl;
         exit(-1);
     }
-    if(nombreDeLigneMatrice!=nombreDeLigneB){
+    if(tailleA != tailleB){
         cout<<"La dimension du vecteur B dans le fichier 'data.txt' n'est pas valide"<<endl;
         exit(-1);
         }
@@ -121,25 +127,24 @@ void afficher(vector<vector<float> > matrice){
 
 //Solution x de l'equation Ax = B, A étant une matrice inversible et B un vecteur colonne 
 void solution (vector<vector<float>> A,vector<float> B){
-    vector<float> x({});
-    
+    float x[A.size] = {0};
+    float somme;
     for(int i(A.size() -1);i>=0;i--){
-        float somme = 0;
+        somme = 0;
         for(int j(i+1);j<A.size();j++){
-            somme += (x[j] * A[i][j]) / A[i][i];
+            somme += (x[j] * A[i][j]);
         }
-        cout<< (B[i]/A[i][i]) -somme<<endl;
-        x.push_back((B[i]/A[i][i]) -somme);
+        x[i]=((B[i] -somme)/ A[i][i]);
     }
     
     cout << "L'équation admet pour solution : (";
-    for(int j(x.size() -1);j>=0;j--){
+    for(int j(0);j<A.size();j++){
         cout<< x[j];
-        if(j != 0){
+        if(j < A.size() - 1){
             cout << " , ";
         } 
     }
-    cout<<")";
+    cout<<")"<<endl;
 }
 
 //Fonction pour rechercher la ligne à considerer comme pivot, contenant la valeur maximal sur la colonne col
