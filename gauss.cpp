@@ -1,20 +1,116 @@
 #include<iostream>
 #include<vector>
 #include<cmath>
+#include<fstream>
 using namespace std;
 
-//a
-float const epsilon = pow(10,-6); 
+int const EPSILON = pow(10, -6);
 
-void afficherLigne(vector<float> tab){
+
+vector<float> remplirLigne(string ligne, int n);
+float iemeSolution(vector<vector<float>> A,vector<float> B, unsigned int i);
+void lireData(int &n,vector<vector<float>> &A, vector <float> &b);
+void gauss(vector<vector<float>> A, vector<float> B);
+void afficherVect(vector<float> tab);
+int positionMaxColonne(vector<vector<float>> tab, int col);
+void afficher(vector<vector<float> > matrice);
+
+int main(){
+    int n = 0;
+    vector<vector<float>> A({});
+    vector<float> B({});
+    lireData(n,A,B);
+    cout<<"Ce programme permet de résoudre un système d'equation par la méthode de l'élimination de Gauss en le mettant"
+    <<"sous forme d'équation matricielle Ax = B. L'utilisateur inserera les matrices A et B dans le fichier data.txt et le programme"
+    <<"affichera les solutions"<<endl;
+    cout<<"La matrice A proposée par l'utilisateur est: "<<endl;
+    afficher(A);
+    cout<<"La matrice B proposée par l'utilisateur est:"<<endl;
+    afficherVect(B);
+     
+    cout<<endl<<endl;
+    gauss(A,B);
+
+    return 0;
+}
+
+//Récuperation des matrices dans le fichier data.txt
+void lireData(int &n,vector<vector<float>> &A, vector <float> &b){
+    fstream donnee;    
+    string line;
+    int nombreLigne=0;
+    int nombreDeLigneMatrice=0;
+    int nombreDeLigneB=0;
+    //ouverture du fichier en mode lecture
+    donnee.open("data.txt", ios::in);                                
+    if(!donnee){
+        cout<<"Erreur lors du chargement des données. Veuillez placer le fichier data.txt dans le répertoire courant."<<endl;
+        exit(-1);                                                                                        //on arrete le programme
+    }
+    
+    while(getline(donnee,line)){
+        if(nombreLigne==0)  n=stoi("0"+line);
+        else if(nombreDeLigneMatrice < n){
+            A.push_back(remplirLigne(line , n));
+            nombreDeLigneMatrice++;
+        }
+        else{
+            b.push_back(stof(line));
+            nombreDeLigneB++;
+        }
+        nombreLigne++;
+    }
+
+    donnee.close();
+    if(nombreDeLigneMatrice!= n){
+        cout<<"La dimension de la matrice A dans le fichier 'data.txt' n'est pas valide"<<endl;
+        exit(-1);
+    }
+    if(nombreDeLigneMatrice!=nombreDeLigneB){
+        cout<<"La dimension du vecteur B dans le fichier 'data.txt' n'est pas valide"<<endl;
+        exit(-1);
+        }
+    }
+
+//Construire les matrices A et b à partir des données recupérées dans le fichier data.txt 
+vector<float> remplirLigne(string ligne, int n){
+    vector <float> row;
+    int i=0;
+    int colonne=0;
+    ligne+=" 0";
+    int len =ligne.length();
+    string valeurString="";
+    while(i<len){
+        if((ligne.at(i)>='0'&& ligne.at(i)<='9')||(ligne.at(i)=='.')||(ligne.at(i)=='+')||(ligne.at(i)=='-')){
+            valeurString+=ligne.at(i);
+        }
+        else{
+            if(valeurString.length()){
+                row.push_back(stof(valeurString));
+                colonne++;
+            }
+            valeurString="";
+        }
+            i++;
+    }
+    if(colonne != n){
+        cout<<"La dimension de la matrice dans le fichier 'data.txt' n'est pas valide"<<endl;
+        exit(-1);
+    }
+    return row;
+}
+
+//Fonction pour afficher un vecteur colonne
+void afficherVect(vector<float> tab){
     for(float elt : tab){
-        cout<<elt<<"\t";
+        cout<<elt<<endl;
     }
     cout<<endl;
 }
+
 //Afficher une matrice n x n
 void afficher(vector<vector<float> > matrice){
-    for(int i=0;i<matrice.size();i++){
+    for(unsigned int i=0;i<matrice.size();i++){
         for(float ligne: matrice[i]){
             cout << ligne << "\t\t";
         }
@@ -22,12 +118,36 @@ void afficher(vector<vector<float> > matrice){
     }
 }
 
+
+//Solution x de l'equation Ax = B, A étant une matrice inversible et B un vecteur colonne 
+void solution (vector<vector<float>> A,vector<float> B){
+    vector<float> x({});
+    
+    for(int i(A.size() -1);i>=0;i--){
+        float somme = 0;
+        for(int j(i+1);j<A.size();j++){
+            somme += (x[j] * A[i][j]) / A[i][i];
+        }
+        cout<< (B[i]/A[i][i]) -somme<<endl;
+        x.push_back((B[i]/A[i][i]) -somme);
+    }
+    
+    cout << "L'équation admet pour solution : (";
+    for(int j(x.size() -1);j>=0;j--){
+        cout<< x[j];
+        if(j != 0){
+            cout << " , ";
+        } 
+    }
+    cout<<")";
+}
+
 //Fonction pour rechercher la ligne à considerer comme pivot, contenant la valeur maximal sur la colonne col
 int positionMaxColonne(vector<vector<float>> tab, int col){
     int pos(-1),max(0);
     for(int i(col);i<tab.size();i++){
-        if(tab[i][col] > max){
-            max = tab[i][col];
+        if(fabs(tab[i][col]) > max){
+            max = fabs(tab[i][col]);
             pos = i;
         }
     }
@@ -41,7 +161,7 @@ void gauss(vector<vector<float>> A, vector<float> B){
     vector<float>* Pmax = nullptr;// Pointeur pour récuperer la ligne contenant l'eventuel pivot
     
     /*
-        Fonctionnement de l'algorithme:
+        Fonctionnem4.17233e-07ent de l'algorithme:
         Pour i allant de la premiere ligne à l'avant-dernière ligne de A:
             *Trouver l'indice k tel que max(A[k][i]) pour k allant de la ligne i à la dernière ligne de A,
             *Si k != i on interchange la ligne k et la ligne i
@@ -59,52 +179,40 @@ void gauss(vector<vector<float>> A, vector<float> B){
         
         //Permutation
         if(Pmax != &A[i]){
-            //Permutation du tableau A
-            temp = A[i];
-            A[i] = *Pmax;
-            *Pmax = temp;
-
             //Permutation du tableau B
             tempB = B[positionMaxColonne(A,i)];
             B[positionMaxColonne(A,i)] = B[i];
             B[i] = tempB;
 
+            //Permutation du tableau A
+            temp = A[i];
+            A[i] = *Pmax;
+            *Pmax = temp;
+            
+        
         }
 
         Ppivot = &A[i];  
-        
-        for(vector<float>* Piter(&A[i+1]);Piter != &A[A.size()]; Piter++){
+        int c(i+1);
+        for(vector<float>* Piter(&A[c]);Piter != &A[A.size()]; Piter++){
             //On stocke (*Piter)[i] dans une variable car lors de l'itération elle sera annuler dès que k = i
+            float coef((*Piter)[i]/(*Ppivot)[i]);    
+        
+            //Modification de B
+            B[c] -=  B[i]  * (*Piter)[i]/ (*Ppivot)[i];
 
-            float coef((*Piter)[i]);    
-
+            //Modification de A
             for(int k(0);k<A.size();k++){
-                (*Piter)[k] -=  (*Ppivot)[k]  * coef/ (*Ppivot)[i];
-
-                //Modification de B
-                if(k == i){    
-                    cout<< B[k] <<" - "<< B[k] << " * " << coef <<"/"<<(*Ppivot)[i]<<" = "<<  B[k] -  B[i]  * coef/ (*Ppivot)[i] <<endl;
-                    B[k] -=  B[i]  * coef/ (*Ppivot)[i];        
-                }
+                (*Piter)[k] -=  (*Ppivot)[k]  * coef;
             }
-
             
-            
+            c++;
         }
+
     }
+    cout<<"La matrice A une fois l'algorithme achevée:"<<endl;
     afficher(A);
-    cout<<"B:"<<endl;
-    afficherLigne(B);
-}
-
-int main(){
-    
-    vector<vector<float>> tab = {{3,8,13},{4,8,12},{2,9,18}};
-    vector<vector<float>> tab1 = {{1,2,3},{2,4,5},{1,8,0}};
-    vector<float> b({4,5,11});
-    afficher(tab1);
-    cout<<endl<<endl;
-    gauss(tab,b);
-
-    return 0;
+    cout<<"La matrice B une fois l'algorithme achevée:"<<endl;
+    afficherVect(B);
+    solution(A,B);
 }
